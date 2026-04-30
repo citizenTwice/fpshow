@@ -16,10 +16,10 @@
 #include <format>
 
 static std::string fmt_plain(const double d) {
-    std::ostringstream sout;
-    sout.precision(8);
-    sout << std::fixed << d;
-    return sout.str();
+  std::ostringstream sout;
+  sout.precision(8);
+  sout << std::fixed << d;
+  return sout.str();
 }
   
 int main() {
