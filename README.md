@@ -1,3 +1,5 @@
+![build](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg)
+
 # fpshow
 Convert/inspect the IEEE 754 bit representation of a floating-point number.
 
