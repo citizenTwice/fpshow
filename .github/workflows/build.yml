@@ -17,6 +17,11 @@ jobs:
             os: macos-latest
             target: mac
 
+          - name: Linux / gcc
+            os: ubuntu-latest
+            target: linux
+
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -25,3 +30,8 @@ jobs:
         if: matrix.target == 'mac'
         shell: bash
         run: sh ./build_mac.sh
+
+      - name: Build Linux
+        if: matrix.target == 'linux'
+        shell: bash
+        run: sh ./build_linux.sh
