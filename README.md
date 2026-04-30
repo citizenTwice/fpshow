@@ -1,6 +1,5 @@
-[![macOS](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg?branch=main&job=build-mac)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
-[![Linux](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg?branch=main&job=build-linux)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
-
+[![macOS](https://img.shields.io/github/actions/workflow/status/OWNER/REPOSITORY/build.yml?branch=main&job=build-mac&label=macOS)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
+[![Linux](https://img.shields.io/github/actions/workflow/status/OWNER/REPOSITORY/build.yml?branch=main&job=build-linux&label=Linux)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
 # fpshow
 Convert/inspect the IEEE 754 bit representation of a floating-point number.
 
