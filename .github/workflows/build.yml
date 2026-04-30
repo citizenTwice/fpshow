@@ -19,10 +19,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: sh ./build_linux.sh
 
-#  build-windows:
-#    name: Windows / MinGW-w64
-#    runs-on: windows-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - run: build_win64.cmd
-#        shell: cmd
+  build-windows:
+    name: Windows / MinGW-w64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: build_win64.cmd
+        shell: cmd
+        
