@@ -15,23 +15,13 @@ jobs:
         include:
           - name: macOS / clang
             os: macos-latest
-            script: ./build_mac.sh
-            shell: bash
-
-#          - name: Linux / gcc
-#            os: ubuntu-latest
-#            script: ./build_linux.sh
-#            shell: bash
-#
-#          - name: Windows / MinGW-w64
-#            os: windows-latest
-#            script: build_win64.cmd
-#            shell: cmd
+            target: mac
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.script }}
+      - name: Build macOS
+        if: matrix.target == 'mac'
+        shell: bash
+        run: sh ./build_mac.sh
