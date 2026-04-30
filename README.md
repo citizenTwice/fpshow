@@ -35,7 +35,6 @@ Examples:
   fpshow --raw64 0x400921fb54442d18
 ```
 
-
 #### License
 MIT License
 
