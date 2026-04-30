@@ -1,6 +1,4 @@
-![build](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg)
 [![macOS](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg?branch=main&job=build-mac)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
-
 [![Linux](https://github.com/citizenTwice/fpshow/actions/workflows/build.yml/badge.svg?branch=main&job=build-linux)](https://github.com/OWNER/REPOSITORY/actions/workflows/build.yml)
 
 # fpshow
