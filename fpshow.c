@@ -88,35 +88,35 @@ int main(int ac, char **av) {
 
   if (ac < 2) {
 usage: 
-printf("Usage: fpshow [--f32|--f64|--raw32|--raw64] <value>\n"
-       "\n"
-       "Inspect the IEEE 754 bit representation of a floating-point value.\n"
-       "\n"
-       "Modes:\n"
-       "  --f32    Parse <value> as a 32-bit float  (default)\n"
-       "  --f64    Parse <value> as a 64-bit double\n"
-       "  --raw32  Interpret <value> as a raw 32-bit hex/integer bit pattern\n"
-       "  --raw64  Interpret <value> as a raw 64-bit hex/integer bit pattern\n"
-       "\n"
-       "Arguments:\n"
-       "  <value>  Numeric value to inspect. For --raw32/--raw64, hex (0x...)\n"
-       "           and decimal integers are accepted.\n"
-       "\n"
-       "Output:\n"
-       "  Sign, exponent, and fraction fields with their numeric values.\n"
-       "  Decoded value in mathematical form (handles ±0, ±inf, NaN, subnormals).\n"
-       "  Plain decimal and hex-float representations.\n"
-       "  Raw bit pattern with [sign][exponent][fraction] layout.\n"
-       "  ARMv8-A+ 8-bit immediate encoding eligibility and operand byte.\n"
-       "           e.g.: fmov s0, 1.125\n"
-       "\n"
-       "Examples:\n"
-       "  fpshow 1.0\n"
-       "  fpshow --f32 -2.5\n"
-       "  fpshow --f64 3.141592653589793\n"
-       "  fpshow --raw32 0x3f800000\n"
-       "  fpshow --raw64 0x400921fb54442d18\n");
-    return 1;
+  printf("Usage: fpshow [--f32|--f64|--raw32|--raw64] <value>\n"
+        "\n"
+        "Inspect the IEEE 754 bit representation of a floating-point value.\n"
+        "\n"
+        "Modes:\n"
+        "  --f32    Parse <value> as a 32-bit float  (default)\n"
+        "  --f64    Parse <value> as a 64-bit double\n"
+        "  --raw32  Interpret <value> as a raw 32-bit hex/integer bit pattern\n"
+        "  --raw64  Interpret <value> as a raw 64-bit hex/integer bit pattern\n"
+        "\n"
+        "Arguments:\n"
+        "  <value>  Numeric value to inspect. For --raw32/--raw64, hex (0x...)\n"
+        "           and decimal integers are accepted.\n"
+        "\n"
+        "Output:\n"
+        "  Sign, exponent, and fraction fields with their numeric values.\n"
+        "  Decoded value in mathematical form (handles ±0, ±inf, NaN, subnormals).\n"
+        "  Plain decimal and hex-float representations.\n"
+        "  Raw bit pattern with [sign][exponent][fraction] layout.\n"
+        "  ARMv8-A+ 8-bit immediate encoding eligibility and operand byte.\n"
+        "           e.g.: fmov s0, 1.125\n"
+        "\n"
+        "Examples:\n"
+        "  fpshow 1.0\n"
+        "  fpshow --f32 -2.5\n"
+        "  fpshow --f64 3.141592653589793\n"
+        "  fpshow --raw32 0x3f800000\n"
+        "  fpshow --raw64 0x400921fb54442d18\n");
+     return 1;
   }
   
   for (int i = 1; i < ac; i++) {
@@ -154,119 +154,118 @@ printf("Usage: fpshow [--f32|--f64|--raw32|--raw64] <value>\n"
   } else {
     assert(0 && "WTF");
   }
-
- if (mode == MODE_F32 || mode == MODE_RAW32) {
-   uint32_t exponent = (raw32 & 0b01111111100000000000000000000000UL) >> 23;
-   uint32_t sign     = (raw32 & 0b10000000000000000000000000000000UL) >> 31;
-   uint32_t fraction =  raw32 & 0b00000000011111111111111111111111UL;
-   printf("sign          : %x\n", sign);
-   printf("exponent      : 0x%08x | %u\n", exponent, exponent);
-   printf("fraction      : 0x%08x | %u\n", fraction, fraction);
-   printf("value         : ");
-   if (sign && exponent == 0 && fraction == 0) {
-     printf("-0.0\n");
-   } else if (!sign && exponent == 0 && fraction == 0) { 
-     printf("+0.0\n");     
-   } else if (sign && exponent == 0b011111111 && fraction == 0) { 
-     printf("-infinity\n");
-   } else if (!sign && exponent == 0b011111111 && fraction == 0) { 
-     printf("+infinity\n");
-   } else if (exponent == 0b011111111 && fraction != 0) { 
-     printf("nan\n");
-   } else {
-     bool subnorm = false;
-     if (exponent == 0 && fraction != 0) {
-       subnorm = true; // e.g. 1.0e-40f
-     }
-     if (!subnorm) {
-       printf("-1^%u * 1.%u/2^23 * 2^(%u - 127)\n", sign, fraction, exponent);
-       printf("                ");
-       printf("%c%.17lf * 2^%d\n", (sign ? '-' : '+'), 1.0F+(double)fraction/8388608.0F, ((int32_t)exponent) - 127);     
-     } else {
-       printf("-1^%u * 0.%u/2^23 * 2^(-126)\n", sign, fraction);
-       printf("                ");
-       printf("%c%.17lf * 2^(-126)\n", (sign ? '-' : '+'), (double)fraction/8388608.0F);     
-     }
-   }
-   printf("printf %%.*g   : %.*g\n", FLT_DECIMAL_DIG, f32);
-   printf("hex.fp        : %.6a\n", f32);
-   printf("raw 32bit     : 0x%08x\n", raw32);
-   printf("              : [");
-   printf("%d", sign); printf("][");
-   printbinx(exponent, 7); printf("][");
-   printbinx(fraction, 22); printf("]\n");
-   imm8_lkp_val = f32;
- } else if (mode == MODE_F64 || mode == MODE_RAW64) {
-   uint64_t exponent = (raw64 & 0b0111111111110000000000000000000000000000000000000000000000000000UL) >> 52;
-   uint64_t sign     = (raw64 & 0b1000000000000000000000000000000000000000000000000000000000000000UL) >> 63;
-   uint64_t fraction =  raw64 & 0b0000000000001111111111111111111111111111111111111111111111111111UL;
-   printf("sign          : %llx\n", sign);
-   printf("exponent      : 0x%08llx       | %llu\n", exponent, exponent);
-   printf("fraction      : 0x%014llx | %llu\n", fraction, fraction);
-   printf("value         : ");
-   if (sign && exponent == 0 && fraction == 0) {
-     printf("-0.0\n");
-   } else if (!sign && exponent == 0 && fraction == 0) { 
-     printf("+0.0\n");     
-   } else if (sign && exponent == 0b11111111111 && fraction == 0) { 
-     printf("-infinity\n");
-   } else if (!sign && exponent == 0b11111111111 && fraction == 0) { 
-     printf("+infinity\n");
-   } else if (exponent == 0b11111111111 && fraction != 0) { 
-     printf("nan\n");
-   } else {
-     bool subnorm = false;
-     if (exponent == 0 && fraction != 0) {
-       subnorm = true; // e.g. 1.0e-40f
-     }
-     if (!subnorm) {
-       printf("-1^%llu * 1.%llu/2^52 * 2^(%llu - 1023)\n", sign, fraction, exponent);
-       printf("                ");
-       printf("%c%.17lf * 2^%d\n", (sign ? '-' : '+'), 1.0F+(double)fraction/4503599627370496.0F, ((int32_t)exponent) - 1023);     
-     } else {
-       printf("-1^%llu * 0.%llu/2^52 * 2^(-1022)\n", sign, fraction);
-       printf("                ");
-       printf("%c%.17lf * 2^(-1022)\n", (sign ? '-' : '+'), (double)fraction/4503599627370496.0F);     
-     }
-   }
-   // printf("default \%g   : %g\n",f64);
-   printf("printf %%.*g   : %.*g\n", DBL_DECIMAL_DIG, f64);
-   printf("hex.fp        : %.6a\n", f64);
-   printf("raw 64bit     : 0x%016llx\n", raw64);
-   printf("              : [");
-   printf("%lld", sign); printf("][");
-   printbinx(exponent, 10); printf("][");
-   printbinx(fraction, 51); printf("]\n");
-   imm8_lkp_val = f64;
- } else {
-   assert(0);
- }
- // check for ARM64 8-bit immediate fp elegibility
- {
-   char buf[128];
-   snprintf(buf, sizeof(buf), "%.*f", 8, imm8_lkp_val);
-   uint32_t index = 0;
-   bool found = false;
-   // we need an exact match - fall back to txt comparison
-   // lame but effective
-   for (int i = 0; i < IMM8_TAB_SIZE; i++) {
-     if (strcmp(imm8_str_tab[i], buf) == 0) {
-       found = true;
-       index = i;
-     }
-   }
-   printf("ARMv8-A+ fp   : ");
-   if (found) {
-     printf("8 bit immediate form: yes - operand encoding = ");
-     printbinx(imm8_byte_tab[index], 7);
-     printf("\n");
-     printf("                fmov s0, %s ; legal\n", buf);
-     printf("\n");
-   } else {
-     printf("8 bit immediate form: no\n");     
-   }
- }
- 
- return 0;
+  
+  if (mode == MODE_F32 || mode == MODE_RAW32) {
+    uint32_t exponent = (raw32 & 0b01111111100000000000000000000000UL) >> 23;
+    uint32_t sign     = (raw32 & 0b10000000000000000000000000000000UL) >> 31;
+    uint32_t fraction =  raw32 & 0b00000000011111111111111111111111UL;
+    printf("sign          : %x\n", sign);
+    printf("exponent      : 0x%08x | %u\n", exponent, exponent);
+    printf("fraction      : 0x%08x | %u\n", fraction, fraction);
+    printf("value         : ");
+    if (sign && exponent == 0 && fraction == 0) {
+      printf("-0.0\n");
+    } else if (!sign && exponent == 0 && fraction == 0) { 
+      printf("+0.0\n");     
+    } else if (sign && exponent == 0b011111111 && fraction == 0) { 
+      printf("-infinity\n");
+    } else if (!sign && exponent == 0b011111111 && fraction == 0) { 
+      printf("+infinity\n");
+    } else if (exponent == 0b011111111 && fraction != 0) { 
+      printf("nan\n");
+    } else {
+      bool subnorm = false;
+      if (exponent == 0 && fraction != 0) {
+        subnorm = true; // e.g. 1.0e-40f
+      }
+      if (!subnorm) {
+        printf("-1^%u * 1.%u/2^23 * 2^(%u - 127)\n", sign, fraction, exponent);
+        printf("                ");
+        printf("%c%.17lf * 2^%d\n", (sign ? '-' : '+'), 1.0F+(double)fraction/8388608.0F, ((int32_t)exponent) - 127);     
+      } else {
+        printf("-1^%u * 0.%u/2^23 * 2^(-126)\n", sign, fraction);
+        printf("                ");
+        printf("%c%.17lf * 2^(-126)\n", (sign ? '-' : '+'), (double)fraction/8388608.0F);     
+      }
+    }
+    printf("printf %%.*g   : %.*g\n", FLT_DECIMAL_DIG, f32);
+    printf("hex.fp        : %.6a\n", f32);
+    printf("raw 32bit     : 0x%08x\n", raw32);
+    printf("              : [");
+    printf("%d", sign); printf("][");
+    printbinx(exponent, 7); printf("][");
+    printbinx(fraction, 22); printf("]\n");
+    imm8_lkp_val = f32;
+  } else if (mode == MODE_F64 || mode == MODE_RAW64) {
+    uint64_t exponent = (raw64 & 0b0111111111110000000000000000000000000000000000000000000000000000UL) >> 52;
+    uint64_t sign     = (raw64 & 0b1000000000000000000000000000000000000000000000000000000000000000UL) >> 63;
+    uint64_t fraction =  raw64 & 0b0000000000001111111111111111111111111111111111111111111111111111UL;
+    printf("sign          : %llx\n", sign);
+    printf("exponent      : 0x%08llx       | %llu\n", exponent, exponent);
+    printf("fraction      : 0x%014llx | %llu\n", fraction, fraction);
+    printf("value         : ");
+    if (sign && exponent == 0 && fraction == 0) {
+      printf("-0.0\n");
+    } else if (!sign && exponent == 0 && fraction == 0) { 
+      printf("+0.0\n");     
+    } else if (sign && exponent == 0b11111111111 && fraction == 0) { 
+      printf("-infinity\n");
+    } else if (!sign && exponent == 0b11111111111 && fraction == 0) { 
+      printf("+infinity\n");
+    } else if (exponent == 0b11111111111 && fraction != 0) { 
+      printf("nan\n");
+    } else {
+      bool subnorm = false;
+      if (exponent == 0 && fraction != 0) {
+        subnorm = true; // e.g. 1.0e-40f
+      }
+      if (!subnorm) {
+        printf("-1^%llu * 1.%llu/2^52 * 2^(%llu - 1023)\n", sign, fraction, exponent);
+        printf("                ");
+        printf("%c%.17lf * 2^%d\n", (sign ? '-' : '+'), 1.0F+(double)fraction/4503599627370496.0F, ((int32_t)exponent) - 1023);     
+      } else {
+        printf("-1^%llu * 0.%llu/2^52 * 2^(-1022)\n", sign, fraction);
+        printf("                ");
+        printf("%c%.17lf * 2^(-1022)\n", (sign ? '-' : '+'), (double)fraction/4503599627370496.0F);     
+      }
+    }
+    // printf("default \%g   : %g\n",f64);
+    printf("printf %%.*g   : %.*g\n", DBL_DECIMAL_DIG, f64);
+    printf("hex.fp        : %.6a\n", f64);
+    printf("raw 64bit     : 0x%016llx\n", raw64);
+    printf("              : [");
+    printf("%lld", sign); printf("][");
+    printbinx(exponent, 10); printf("][");
+    printbinx(fraction, 51); printf("]\n");
+    imm8_lkp_val = f64;
+  } else {
+    assert(0);
+  }
+  // check for ARM64 8-bit immediate fp elegibility
+  {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%.*f", 8, imm8_lkp_val);
+    uint32_t index = 0;
+    bool found = false;
+    // we need an exact match - fall back to txt comparison
+    // lame but effective
+    for (int i = 0; i < IMM8_TAB_SIZE; i++) {
+      if (strcmp(imm8_str_tab[i], buf) == 0) {
+        found = true;
+        index = i;
+      }
+    }
+    printf("ARMv8-A+ fp   : ");
+    if (found) {
+      printf("8 bit immediate form: yes - operand encoding = ");
+      printbinx(imm8_byte_tab[index], 7);
+      printf("\n");
+      printf("                fmov s0, %s ; legal\n", buf);
+      printf("\n");
+    } else {
+      printf("8 bit immediate form: no\n");     
+    }
+  }  
+  return 0;
 }
 
