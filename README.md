@@ -41,6 +41,9 @@ Examples:
 #### License
 MIT License
 
+#### Acknowledgements 
+@memphis242 for code review & valuable suggestions.
+
 #### Feedback
 Bugs/Suggestions/Comments/Feedback to:
 Email: feedback@THLG.NL
