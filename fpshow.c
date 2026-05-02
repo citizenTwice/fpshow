@@ -23,9 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
-/*
- clang -Wall -std=gnu99 fpshow.c -o fpshow
-*/
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,6 +32,8 @@ SOFTWARE.
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <signal.h>
+#include <errno.h>
 
 typedef enum MODE {MODE_F32, MODE_F64, MODE_RAW32, MODE_RAW64} FPMODE;
 
@@ -69,13 +68,15 @@ static void printbinx(uint64_t x, int bits) {
 }
 
 int main(int ac, char **av) {
-  assert(sizeof(float)  == 4);
-  assert(sizeof(double) == 8);
-  assert(FLT_RADIX      == 2);
-  assert(FLT_MANT_DIG   == 24);
-  assert(DBL_MANT_DIG   == 53);
-  assert(sizeof(imm8_str_tab)/sizeof(char*) == IMM8_TAB_SIZE);
-  assert(sizeof(imm8_byte_tab)/sizeof(uint8_t) == IMM8_TAB_SIZE);
+  static_assert(sizeof(float)  == 4, "size mismatch");
+  static_assert(sizeof(double) == 8, "size mismatch");
+  static_assert(FLT_RADIX      == 2, "size mismatch");
+  static_assert(FLT_MANT_DIG   == 24, "size mismatch");
+  static_assert(DBL_MANT_DIG   == 53, "size mismatch");
+  static_assert(sizeof(strtoull("0",0,0)) >= sizeof(uint64_t), "size mismatch");
+  static_assert(sizeof(strtoul("0",0,0)) >= sizeof(uint32_t), "size mismatch");
+  static_assert(sizeof(imm8_str_tab)/sizeof(char*) == IMM8_TAB_SIZE, "table size mismatch");
+  static_assert(sizeof(imm8_byte_tab)/sizeof(uint8_t) == IMM8_TAB_SIZE, "table size mismatch");
 
   double f64 = 0;
   float f32 = 0;
@@ -118,9 +119,14 @@ usage:
         "  fpshow --raw64 0x400921fb54442d18\n");
      return 1;
   }
-  
+  bool opt_given = false;
   for (int i = 1; i < ac; i++) {
     if (*(av[i]) == '-' && *(av[i]+1) == '-') {
+      if (opt_given) {
+        fprintf(stderr, "options conflict\n");
+        return 1;
+      }
+      opt_given = true;
       if (strcmp(av[i], "--f32") == 0) {
         mode = MODE_F32;
       } else if (strcmp(av[i], "--f64") == 0) {
@@ -139,20 +145,26 @@ usage:
   if (!input) {
     goto usage;
   }
+  errno = 0;
   if (mode == MODE_F32) {
     f32 = strtof(input, 0);
-    raw32 = *((uint32_t*)(&f32));   
+    memcpy(&raw32, &f32, sizeof(raw32));
   } else if (mode == MODE_F64) {
     f64 = strtod(input, 0);
-    raw64 = *((uint64_t*)(&f64));   
+    memcpy(&raw64, &f64, sizeof(raw64));
   } else if (mode == MODE_RAW32) {
     raw32 = strtoul(input, 0, 0);
-    f32 = *((float*)(&raw32));   
+    memcpy(&f32, &raw32, sizeof(f32));
   } else if (mode == MODE_RAW64) {
-    raw64 = strtoul(input, 0, 0);
-    f64 = *((double*)(&raw64));   
+    raw64 = strtoull(input, 0, 0);
+    memcpy(&f64, &raw64, sizeof(f64));
   } else {
     assert(0 && "WTF");
+    raise(SIGABRT);
+  }
+  if (errno) {
+    fprintf(stderr, "input <%s> malformed or out of range\n", input);
+    return 1;
   }
   
   if (mode == MODE_F32 || mode == MODE_RAW32) {
@@ -240,6 +252,7 @@ usage:
     imm8_lkp_val = f64;
   } else {
     assert(0);
+    raise(SIGABRT);
   }
   // check for ARM64 8-bit immediate fp elegibility
   {
@@ -255,15 +268,15 @@ usage:
         index = i;
       }
     }
-    printf("ARMv8-A+ fp   : ");
+    printf("ARMv8-A+ fp   : 8 bit immediate form: ");
     if (found) {
-      printf("8 bit immediate form: yes - operand encoding = ");
+      printf("yes - operand encoding = ");
       printbinx(imm8_byte_tab[index], 7);
       printf("\n");
       printf("                fmov s0, %s ; legal\n", buf);
       printf("\n");
     } else {
-      printf("8 bit immediate form: no\n");     
+      printf("no\n");     
     }
   }  
   return 0;

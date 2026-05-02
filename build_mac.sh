@@ -1,2 +1,2 @@
 #!/bin/sh
-clang -Wall -std=gnu99 fpshow.c -o fpshow
+clang -Wall -std=gnu11 fpshow.c -o fpshow
