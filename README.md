@@ -42,7 +42,7 @@ Examples:
 MIT License
 
 #### Acknowledgements 
-@memphis242 for code review & valuable suggestions.
+[@memphis242](https://github.com/memphis242) for code review & valuable suggestions.
 
 #### Feedback
 Bugs/Suggestions/Comments/Feedback to:
