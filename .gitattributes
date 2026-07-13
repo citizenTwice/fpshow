@@ -1,2 +1,2 @@
 # Test shell script ignored for language stats
-do_teset.sh  linguist-vendored
+do_test.sh  linguist-vendored
